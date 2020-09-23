@@ -13,5 +13,9 @@ namespace eShopSolution.Data.Entities
         public int ViewCount { set; get; }
         public DateTime DateCreated { set; get; }
         public string SeoAlias { set; get; }
+        public List<ProductInCategory> ProductInCategories { set; get; } //Foreign Key product-Category
+        public List<OrderDetail> OrderDetails { set; get; }
+        public List<ProductTranslation> ProductTranslations { get; set; }
+        public List<Cart> Carts { get; set; }
     }
 }
