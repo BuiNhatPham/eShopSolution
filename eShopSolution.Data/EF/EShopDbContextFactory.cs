@@ -10,6 +10,7 @@ namespace eShopSolution.Data.EF
 {
    public class EShopDbContextFactory : IDesignTimeDbContextFactory<EShopDBContext>
     {
+        //initial connection based on appsetting
         public EShopDBContext CreateDbContext(string[] args)
         {
             IConfigurationRoot configuration = new ConfigurationBuilder()
