@@ -13,7 +13,7 @@ namespace eShopSolution.Data.Entities
         public bool isDefault { get; set; }
         public DateTime DateCreated { get; set; }
         public int SortOrder { get; set; }
-        public int FileSize { get; set; }
+        public long FileSize { get; set; }
         public Product Product { get; set; } //to link foreign key to Product
     }
 }
