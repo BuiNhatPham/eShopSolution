@@ -1,3 +1,5 @@
+====Export Excel Cach 1 khong param dung  @using http.beginform======
+
 using GearShop.Data.Models.DAL;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +26,7 @@ using OfficeOpenXml.Style;
             worksheet.Cells["E1"].Value = "Số Lượng";
             
 
-            using (ExcelRange Rng = worksheet.Cells[1,1,1,5])
+            using (ExcelRange Rng = worksheet.Cells["A1:E1"])
             {                
                 Rng.Style.Font.Size = 12;
                 Rng.Style.Font.Bold = true;
@@ -70,3 +72,100 @@ using OfficeOpenXml.Style;
                 
             }
         }
+        
+       
+       ========Export Excel cach 2 co param , dung jquery================================
+       
+       
+       [HttpPost]
+        public ActionResult Export(int? a,int? b,string c)
+        {
+             ExcelPackage Ep = new ExcelPackage();
+            var _SheetName = "Báo Cáo Sản Phẩm Trong Kho";
+            var _FileName = "Bao_Cao_San_Pham_Trong_Kho" + ".xlsx";
+             var  worksheet = Ep.Workbook.Worksheets.Add(_SheetName);
+            worksheet.Cells["A1"].Value = "Mã Sản Phẩm";
+            worksheet.Cells["B1"].Value = "Tên Sản Phẩm";
+            worksheet.Cells["C1"].Value = "Giá Bán";
+            worksheet.Cells["D1"].Value = "% Giảm Giá";
+            worksheet.Cells["E1"].Value = "Số Lượng";
+            
+
+            using (ExcelRange Rng = worksheet.Cells["A1:E1"])
+            {                
+                Rng.Style.Font.Size = 12;
+                Rng.Style.Font.Bold = true;
+                Rng.Style.Font.Color.SetColor(Color.White);
+                Rng.Style.Font.Name = "Arial";
+                Rng.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                Rng.Style.Fill.BackgroundColor.SetColor(Color.DarkBlue);
+                Rng.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                Rng.Style.VerticalAlignment = ExcelVerticalAlignment.Center; 
+
+            }                  
+            worksheet.Row(1).Height = 28;
+            int row = 2;
+            var collection = unitOfWork.ProductRepo.Get();
+            foreach (var item in collection)
+            {
+
+                worksheet.Cells[string.Format("A{0}", row)].Value = item.ProductCode;
+                worksheet.Cells[string.Format("B{0}", row)].Value = item.ProductName;
+                worksheet.Cells[string.Format("C{0}", row)].Value = item.Price;
+                worksheet.Cells[string.Format("D{0}", row)].Value = item.PercentSale;
+                worksheet.Cells[string.Format("E{0}", row)].Value = item.Quantity;
+                worksheet.Row(row).Height = 28;
+
+                var modelRows = collection.Count() + 1;
+                string modelRange = "A1:E" + modelRows.ToString();
+                var modelTable = worksheet.Cells[modelRange];
+                modelTable.AutoFitColumns();
+                // Assign borders
+                modelTable.Style.Border.BorderAround(ExcelBorderStyle.Thin);
+                row++;
+
+            }
+            string handle = Guid.NewGuid().ToString();
+            using (var stream = new MemoryStream())
+            {
+                Ep.SaveAs(stream);
+                stream.Position = 0;
+                TempData[handle] = stream.ToArray();
+            }
+            return new JsonResult()
+            {
+                Data = new { FileGuid = handle, FileName = _FileName }
+            };
+
+        }
+        [HttpGet]
+        public virtual ActionResult Download(string fileGuid, string fileName)
+        {
+            if (TempData[fileGuid] != null)
+            {
+                byte[] data = TempData[fileGuid] as byte[];
+                return File(data, "application/vnd.ms-excel", fileName);
+            }
+            else
+            {
+                return new EmptyResult();
+            }
+        }
+       
+>>>>>>>Jquery>>>>>>>>>>>>>>
+//Export Excel
+        $('#btnExport').off('click').on('click', function (e) {
+            e.preventDefault();
+            $.ajax({
+                url: "/Admin/Product/Export",
+                data: { a: 1,b:2,c:"laC" },
+                dataType: "json",
+                type: "POST",
+                success: function (res) {                    
+                    window.location = '/Admin/Product/Download?fileGuid=' + res.FileGuid
+                        + '&filename=' + res.FileName;
+                }
+            })
+        });
+       
+        
